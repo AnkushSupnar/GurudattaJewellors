@@ -1,0 +1,12 @@
+.box{
+    width: 310px;
+    height: 478px;
+    float: right;
+    border: 1px solid #59c385;
+}
+.my-login{
+    background: royalblue;
+    border-block-color: red;
+    border-radius: 8rem;
+    display: block;
+}
