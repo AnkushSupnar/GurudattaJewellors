@@ -20,10 +20,13 @@ class Billing extends Component {
 
         this.state = {
             customer: this.initialState.customer,
-            fullname: this.initialState.customer.fname + ' ' + this.initialState.customer.mname + '' + this.initialState.customer.lname,
+            fullname: [],
             itemName: [],
+            customerName:[],
             item:this.initialState.item
+
         }
+        this.onChange = this.onChange.bind(this)
     }
     initialState = {
         customer: {
@@ -63,10 +66,23 @@ class Billing extends Component {
             const item = res.data;
             this.setState({ itemName: item })
         })
+
+        axios.get(`${base_url}/customers/allnames`).then(res=>{
+            const names = res.data;
+            
+            this.setState({fullname:names})
+        })
     }
+    onChange(e)
+    {
+        console.log("Changed");
+    }
+
 
     render() {
         const {id,name,hsncode,purity,gross,unit,netweight,otherweight,rate,labour,othercharges,metal,total,qty}=this.state.item;
+        const {custFullName}=this.state.fullname;
+        const {mname,fname,lname,gender,contactno,altercontact,email,address,city,post,district,taluka,pin} = this.state.customer;
         return (
             <div className="my-1 mx-1" style={{ marginTop: 10 }}>
                 <Row >
@@ -80,9 +96,25 @@ class Billing extends Component {
                                         <Form.Group as={Col} sm={12} md={4} lg={4} className="">
                                             <Form.Label className="text-dark">Select Customer</Form.Label>
                                             <div className="App-Component bg-success">
-                                                <Input type="text" className="Input" name="customerName" list="customerNameList" placeholder="Enter Customer Name" required />
+                                                <Input type="text" 
+                                                    className="Input"
+                                                    name="customerName" 
+                                                    list="customerNameList" 
+                                                    value={name}
+                                                    onChange={this.onChange}
+                                                    placeholder="Enter Customer Name" 
+                                                    onKeyPress={
+                                                        event=>{
+                                                            if(event.key==='Enter')
+                                                            {
+                                                                console.log("Value Enter "+event.target.value);
+
+                                                            }
+                                                        }
+                                                    }
+                                                    required />
                                                 <datalist id="customerNameList">
-                                                    {this.nameList.map(name =>
+                                                    {this.state.fullname.map(name =>
                                                         <option key={name}>{name}</option>
                                                     )};
                                               </datalist>
@@ -97,7 +129,20 @@ class Billing extends Component {
                                         <Form.Group as={Col} sm={12} md={4}>
                                             <Form.Label className="text-dark">Item Name</Form.Label>
                                             <div className="App-Component">
-                                                <Input type="text" name="itemName" list="itemNameList" placeholder="Enter Item Name" required />
+                                                <Input 
+                                                    type="text" 
+                                                    name="itemName" 
+                                                    list="itemNameList" 
+                                                    placeholder="Enter Item Name" 
+                                                    onKeyPress={
+                                                        event=>{
+                                                            if(event.key==='Enter')
+                                                            {
+                                                                console.log("Key Enter")
+                                                            }
+                                                        }
+                                                    }
+                                                    required />
                                                 <datalist id="itemNameList">
                                                     {this.state.itemName.map(item =>
                                                         <option key={item}>{item}</option>
@@ -150,11 +195,11 @@ class Billing extends Component {
                                         </Form.Group>
                                         <Form.Group as={Col} sm={12} md={4} lg={4}>
                                             <Form.Label className="text-dark">Total Amount</Form.Label>
-                                            <Form.Control type="text" id="total" name="total" value={total} placeholder="Total Amount" />
+                                            <Form.Control type="text" id="total" name="total" value={total} placeholder="Total Amount" readOnly/>
                                         </Form.Group>
                                         <Form.Group as={Col} sm={12} md={4} lg={4}>
                                             <Form.Label className="text-dark">Quantity</Form.Label>
-                                            <Form.Control type="number" id="qty" name="qty" value={qty} placeholder="Pices" />
+                                            <Form.Control type="number" id="qty" name="qty" value={qty} placeholder="Pices" readOnly/>
                                         </Form.Group>
 
                                     </Form.Row>
