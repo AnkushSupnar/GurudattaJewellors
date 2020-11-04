@@ -21,12 +21,13 @@ class Billing extends Component {
         this.state = {
             customer: this.initialState.customer,
             fullname: [],
+            custfullname: '',
             itemName: [],
-            customerName:[],
-            item:this.initialState.item
-
+            customerName: [],
+            item: this.initialState.item,
+            customerinfo: 'Customer Information'
         }
-        this.onChange = this.onChange.bind(this)
+        //   this.onchange = this.onchange.bind(this);
     }
     initialState = {
         customer: {
@@ -45,20 +46,20 @@ class Billing extends Component {
             pin: ''
         },
         item: {
-            id:'',
-            name:'',
-            hsncode:'',
-            purity:'',
-            gross:'',
-            unit:'',
-            otherweight:'',
-            netweight:'',
-            rate:'',
-            labour:'',
-            othercharges:'',
-            metal:'',
-            qty:'',
-            total:''
+            id: '',
+            name: '',
+            hsncode: '',
+            purity: '',
+            gross: '',
+            unit: '',
+            otherweight: '',
+            netweight: '',
+            rate: '',
+            labour: '',
+            othercharges: '',
+            metal: '',
+            qty: '',
+            total: ''
         }
     }
     componentDidMount() {
@@ -67,78 +68,150 @@ class Billing extends Component {
             this.setState({ itemName: item })
         })
 
-        axios.get(`${base_url}/customers/allnames`).then(res=>{
+        axios.get(`${base_url}/customers/allnames`).then(res => {
             const names = res.data;
-            
-            this.setState({fullname:names})
+
+            this.setState({ fullname: names })
         })
     }
-    onChange(e)
-    {
-        console.log("Changed");
+    onchange = (e) => {
+        const target = e.target;
+        const value = target.value;
+        const name = target.name;
+        //this.setState({custfullname:target.value})
+        let customer = { ...this.state.customer };
+        customer[name] = value;
+        this.setState({ customer });
+        this.setState({ customerinfo: customer.fname })
+    }
+    searchCustomer = (name) => {
+        if(name==="")
+        {
+            return
+        }
+        axios.get(`${base_url}/customers/byname/${name}`).then(res => {
+            const c = res.data;
+            if(c===null)
+            {
+                return
+            }
+            this.setState({ customer: c })
+            let info = "Name:- " + c.fname + " " + c.mname + " " + c.lname +
+                "Gender:-" + c.gender +
+                " ContactNo:-" + c.contactno + "/" + c.altercontact +
+                " Email:" + c.email +
+                " Address:" + c.address +
+                " City:" + c.city +
+                " Post:" + c.post +
+                " Taluka:" + c.taluka +
+                " Dist:" + c.district;
+            this.setState({ customerinfo: info });
+        })
+    }
+    itemOnChange=(e)=>{
+        const target = e.target;
+        const value = target.value;
+        const name = target.name;
+        //this.setState({custfullname:target.value})
+        let item = { ...this.state.customer };
+        item[name] = value;
+        this.setState({ item });
+        console.log(this.state.item.name);
     }
 
+    searchItem=(name)=>{
+        if(name==="")
+        {
+            return
+        }
+        console.log("i got to search "+name);
+        axios.get(`${base_url}/items/itemByName/${name}`).then(res=>{
+            const i = res.data;
+            let item= {
+                id: i.id,
+                name: i.name,
+                hsncode: i.hsncode,
+                purity: i.purity,
+                gross: i.gross,
+                unit: i.unit,
+                otherweight: i.otherweight,
+                netweight: i.gross+i.otherweight,
+                rate: i.rate,
+                labour: i.labour,
+                othercharges: i.otherweight,
+                metal: i.metal,
+                qty: 1,
+                total: (i.rate*1)+i.labour+i.otherweight
+            }
+            
+            this.setState({item});
+        })
+    }
+    save=(e)=>{
+        e.preventDefault();
+    }
 
     render() {
-        const {id,name,hsncode,purity,gross,unit,netweight,otherweight,rate,labour,othercharges,metal,total,qty}=this.state.item;
-        const {custFullName}=this.state.fullname;
-        const {mname,fname,lname,gender,contactno,altercontact,email,address,city,post,district,taluka,pin} = this.state.customer;
+        const { id, name, hsncode, purity, gross, unit, netweight, otherweight, rate, labour, othercharges, metal, total, qty } = this.state.item;
+        const { mname, fname, lname, gender, contactno, altercontact, email, address, city, post, district, taluka, pin } = this.state.customer;
+        const { custfullname } = this.state.custfullname;
+        const { customerinfo } = this.state.customerinfo
         return (
             <div className="my-1 mx-1" style={{ marginTop: 10 }}>
                 <Row >
                     <Col md={8} sm={12} lg={8}>
                         <Card className={"border border-dark"}>
-
                             <Card.Body className="my-0">
                                 <Card.Title className="bg-success text-white text-center ">Customer Information</Card.Title>
-                                <Form>
+                                <Form onSubmit={this.save}>
                                     <Form.Row className="noGutters">
                                         <Form.Group as={Col} sm={12} md={4} lg={4} className="">
                                             <Form.Label className="text-dark">Select Customer</Form.Label>
                                             <div className="App-Component bg-success">
-                                                <Input type="text" 
+                                                <Input type="text"
                                                     className="Input"
-                                                    name="customerName" 
-                                                    list="customerNameList" 
-                                                    value={name}
-                                                    onChange={this.onChange}
-                                                    placeholder="Enter Customer Name" 
+                                                    name="fname"
+                                                    list="customerNameList"
+                                                    value={custfullname} onChange={this.onchange}
+                                                    placeholder="Enter Customer Name"
                                                     onKeyPress={
-                                                        event=>{
-                                                            if(event.key==='Enter')
-                                                            {
-                                                                console.log("Value Enter "+event.target.value);
+                                                        event => {
+                                                            if (event.key === 'Enter') {
 
+                                                                this.searchCustomer(event.target.value);
                                                             }
                                                         }
                                                     }
-                                                    required />
+                                                    required autoComplete="off" />
                                                 <datalist id="customerNameList">
                                                     {this.state.fullname.map(name =>
                                                         <option key={name}>{name}</option>
                                                     )};
                                               </datalist>
+
                                             </div>
                                         </Form.Group>
+
                                         <Form.Group as={Col} sm={12} md={8} lg={8} className="my-0">
-                                            <Form.Label className="text-dark">Customer Information</Form.Label>
-                                            <Form.Control as="textarea" rows="1" readOnly />
+                                            <div className="text-dark border border-primary">{this.state.customerinfo}</div>
+
                                         </Form.Group>
                                     </Form.Row>
                                     <Form.Row>
                                         <Form.Group as={Col} sm={12} md={4}>
                                             <Form.Label className="text-dark">Item Name</Form.Label>
                                             <div className="App-Component">
-                                                <Input 
-                                                    type="text" 
-                                                    name="itemName" 
-                                                    list="itemNameList" 
-                                                    placeholder="Enter Item Name" 
+                                                <Input
+                                                    type="text"
+                                                    name="name"
+                                                    value={name}
+                                                    onChange={this.itemOnChange}
+                                                    list="itemNameList"
+                                                    placeholder="Enter Item Name"
                                                     onKeyPress={
-                                                        event=>{
-                                                            if(event.key==='Enter')
-                                                            {
-                                                                console.log("Key Enter")
+                                                        event => {
+                                                            if (event.key === 'Enter') {
+                                                                this.searchItem(event.target.value)
                                                             }
                                                         }
                                                     }
@@ -151,55 +224,55 @@ class Billing extends Component {
                                             </div>
                                         </Form.Group>
                                         <Form.Group as={Col} sm={12} md={4} lg={4}>
-                                            <Form.Label className="text-dark" id="hsncode" name="hsncode" value={hsncode}>HSN Code</Form.Label>
-                                            <Form.Control type="text" placeholder="HSN Code" readOnly />
+                                            <Form.Label className="text-dark" id="hsncode" >HSN Code</Form.Label>
+                                            <Form.Control type="text" name="hsncode" value={hsncode||""} placeholder="HSN Code" readOnly />
                                         </Form.Group>
                                         <Form.Group as={Col} sm={12} md={4} lg={4}>
                                             <Form.Label className="text-dark">Purity</Form.Label>
-                                            <Form.Control type="text" id="purity" name="purity" value={purity} placeholder="Purity" readOnly />
+                                            <Form.Control type="text" id="purity" name="purity" value={purity||""} placeholder="Purity" readOnly />
                                         </Form.Group>
                                     </Form.Row>
                                     <Form.Row>
                                         <Form.Group as={Col} sm={12} md={4} lg={4}>
                                             <Form.Label className="text-dark">Gross Weight</Form.Label>
-                                            <Form.Control type="text" id="gross" name="gross" value={gross} placeholder="Gross Weight" readOnly />
+                                            <Form.Control type="text" id="gross" name="gross" value={gross||""} placeholder="Gross Weight" readOnly />
                                         </Form.Group>
                                         <Form.Group as={Col} sm={12} md={4} lg={4}>
                                             <Form.Label className="text-dark">Other Weight</Form.Label>
-                                            <Form.Control type="text" id="otherweight" name="otherweight" value={otherweight} placeholder="Other Weight" readOnly />
+                                            <Form.Control type="text" id="otherweight" name="otherweight" value={otherweight||""} placeholder="Other Weight" readOnly />
                                         </Form.Group>
                                         <Form.Group as={Col} sm={12} md={4} lg={4}>
                                             <Form.Label className="text-dark">Net Weight</Form.Label>
-                                            
-                                            <Form.Control type="text" id="netweight" name="netweight" value={netweight}  placeholder="Net Weight" readOnly />
+
+                                            <Form.Control type="text" id="netweight" name="netweight" value={netweight||""} placeholder="Net Weight" readOnly />
                                         </Form.Group>
                                     </Form.Row>
                                     <Form.Row>
                                         <Form.Group as={Col} sm={12} md={4} lg={4}>
                                             <Form.Label className="text-dark">Rate</Form.Label>
-                                            <Form.Control type="text" id="rate" name="rate" value={rate} placeholder="Rate" readOnly />
+                                            <Form.Control type="text" id="rate" name="rate" value={rate||""} placeholder="Rate" readOnly />
                                         </Form.Group>
                                         <Form.Group as={Col} sm={12} md={4} lg={4}>
                                             <Form.Label className="text-dark">Labour Charges</Form.Label>
-                                            <Form.Control type="text" id="labour" name="labour" value={labour} placeholder="Labour Charges" readOnly />
+                                            <Form.Control type="text" id="labour" name="labour" value={labour||""} placeholder="Labour Charges" readOnly />
                                         </Form.Group>
                                         <Form.Group as={Col} sm={12} md={4} lg={4}>
                                             <Form.Label className="text-dark">Other Charges</Form.Label>
-                                            <Form.Control type="text" id="othercharges" name="othercharges" value={othercharges} placeholder="Other Charges" readOnly />
+                                            <Form.Control type="text" id="othercharges" name="othercharges" value={othercharges||""} placeholder="Other Charges" readOnly />
                                         </Form.Group>
                                     </Form.Row>
                                     <Form.Row>
-                                    <Form.Group as={Col} sm={12} md={4} lg={4}>
+                                        <Form.Group as={Col} sm={12} md={4} lg={4}>
                                             <Form.Label className="text-dark">Metal Name</Form.Label>
-                                            <Form.Control type="text" id="metal" name="metal" value={metal} placeholder="Metal Name" readOnly />
+                                            <Form.Control type="text" id="metal" name="metal" value={metal||""} placeholder="Metal Name" readOnly />
                                         </Form.Group>
                                         <Form.Group as={Col} sm={12} md={4} lg={4}>
                                             <Form.Label className="text-dark">Total Amount</Form.Label>
-                                            <Form.Control type="text" id="total" name="total" value={total} placeholder="Total Amount" readOnly/>
+                                            <Form.Control type="text" id="total" name="total" value={total||""} placeholder="Total Amount" readOnly />
                                         </Form.Group>
                                         <Form.Group as={Col} sm={12} md={4} lg={4}>
                                             <Form.Label className="text-dark">Quantity</Form.Label>
-                                            <Form.Control type="number" id="qty" name="qty" value={qty} placeholder="Pices" readOnly/>
+                                            <Form.Control type="number" id="qty" name="qty" value={qty||""} placeholder="Pices" readOnly />
                                         </Form.Group>
 
                                     </Form.Row>
