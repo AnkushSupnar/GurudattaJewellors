@@ -4,6 +4,8 @@ import { Card, Form, Button, Table } from 'react-bootstrap'
 import { Input } from 'reactstrap'
 import axios from 'axios'
 import base_url from '../Service/RestApi';
+import { ToastContainer, toast } from 'react-toastify';
+
 class Billing extends Component {
     constructor() {
         super();
@@ -87,6 +89,7 @@ class Billing extends Component {
     searchCustomer = (name) => {
         if(name==="")
         {
+            toast.error("Enter Customer Name")
             return
         }
         axios.get(`${base_url}/customers/byname/${name}`).then(res => {
@@ -106,6 +109,11 @@ class Billing extends Component {
                 " Taluka:" + c.taluka +
                 " Dist:" + c.district;
             this.setState({ customerinfo: info });
+        }).catch(err=>{
+            if(err.response.status===404)
+            toast.error("Server Not Found"+err);
+            if(err.response.status===500)
+            toast.error("Name Not Found Select again!");
         })
     }
     itemOnChange=(e)=>{
@@ -145,7 +153,23 @@ class Billing extends Component {
             }
             
             this.setState({item});
+        }).catch(err=>{
+            if(err.response.status===404)
+            toast.error("Server Not Found"+err);
+            
+            if(err.response.status===500)
+            toast.error("Name Not Found Select Item again!");
         })
+    }
+    qtyOnChange=(e)=>{
+        const target = e.target;
+        const value = target.value;
+        const name = target.name;
+        let item = this.state.item;
+        item.qty = value;
+        item.total= (item.rate*value)+item.labour+item.otherweight;
+        this.setState({item})
+        console.log(item.name);
     }
     save=(e)=>{
         e.preventDefault();
@@ -158,6 +182,7 @@ class Billing extends Component {
         const { customerinfo } = this.state.customerinfo
         return (
             <div className="my-1 mx-1" style={{ marginTop: 10 }}>
+                <ToastContainer position="top-center"/>
                 <Row >
                     <Col md={8} sm={12} lg={8}>
                         <Card className={"border border-dark"}>
@@ -215,7 +240,7 @@ class Billing extends Component {
                                                             }
                                                         }
                                                     }
-                                                    required />
+                                                    required autoComplete="off"/>
                                                 <datalist id="itemNameList">
                                                     {this.state.itemName.map(item =>
                                                         <option key={item}>{item}</option>
@@ -266,13 +291,14 @@ class Billing extends Component {
                                             <Form.Label className="text-dark">Metal Name</Form.Label>
                                             <Form.Control type="text" id="metal" name="metal" value={metal||""} placeholder="Metal Name" readOnly />
                                         </Form.Group>
+                                        
+                                        <Form.Group as={Col} sm={12} md={4} lg={4}>
+                                            <Form.Label className="text-dark">Quantity</Form.Label>
+                                            <Form.Control type="number" id="qty" name="qty" value={qty||""} onChange={this.qtyOnChange} placeholder="Pices" />
+                                        </Form.Group>
                                         <Form.Group as={Col} sm={12} md={4} lg={4}>
                                             <Form.Label className="text-dark">Total Amount</Form.Label>
                                             <Form.Control type="text" id="total" name="total" value={total||""} placeholder="Total Amount" readOnly />
-                                        </Form.Group>
-                                        <Form.Group as={Col} sm={12} md={4} lg={4}>
-                                            <Form.Label className="text-dark">Quantity</Form.Label>
-                                            <Form.Control type="number" id="qty" name="qty" value={qty||""} placeholder="Pices" readOnly />
                                         </Form.Group>
 
                                     </Form.Row>
